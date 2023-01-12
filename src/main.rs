@@ -168,6 +168,7 @@ fn main() -> io::Result<()> {
     .into_iter()
     .filter_map(|file| file.ok())
     .filter(|file| file.path().to_str().unwrap().contains(".docx"))
+    .filter(|file| !file.path().to_str().unwrap().contains("_Archive"))
     {
         if file.metadata().unwrap().is_file() && re2.is_match(file.path().to_str().unwrap()) {
             // println!("{}", file.path().display());
@@ -207,13 +208,13 @@ fn main() -> io::Result<()> {
     // let mut indices: Vec<(i32, Vec<Document>)> = Vec::new();
 
     for doc in docs {
-        println!(
-            "found doc: {}",
-            doc.path.file_name().unwrap().to_str().unwrap()
-        );
-        println!("with doc number {}", doc.index);
-        println!("with path {}", doc.path.display());
-        println!("");
+        // println!(
+        //     "found doc: {}",
+        //     doc.path.file_name().unwrap().to_str().unwrap()
+        // );
+        // println!("with doc number {}", doc.index);
+        // println!("with path {}", doc.path.display());
+        // println!("");
 
         // let mut exists_in_vector = false;
 
@@ -257,28 +258,36 @@ fn main() -> io::Result<()> {
     //     }
     // }
 
-    for document_list in indices_sorted.into_iter().enumerate() {
+    for document_list in indices_sorted.into_iter().rev() {
         let to_print = "document index:".yellow();
         println!(
             "{} {}",
             to_print,
-            format!("{}", document_list.0.to_string().yellow())
+            format!("{}", document_list[0].index.to_string().yellow())
         );
 
-        if document_list.1.len() > 1 {
+        if document_list.len() > 1 {
             println!("{}", "index contains multiple documents!".red().bold());
-            for doc in document_list.1 {
-                println!("{}", doc.path.display());
+            for doc in document_list {
+                let link = Link::new(
+                    doc.path.to_str().unwrap(),
+                    doc.path.parent().unwrap().to_str().unwrap(),
+                );
+                println!("{}", link);
             }
         } else {
-            println!("{}", document_list.1[0].path.display());
+            let doc = document_list[0].clone();
+            let link = Link::new(
+                doc.path.to_str().unwrap(),
+                doc.path.parent().unwrap().to_str().unwrap(),
+            );
+            println!("{}", link);
         }
     }
 
     println!("");
     println!("================================================================================================");
     println!("largest document index: {}", largest_index.unwrap().0);
-    println!("at: {}", largest_index_path);
 
     pause();
 
