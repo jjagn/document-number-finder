@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::{
     collections::HashMap,
     io::{self, prelude::*},
@@ -36,6 +37,20 @@ fn pause() {
 
 fn is_directory(entry: &DirEntry) -> bool {
     entry.file_type().is_dir()
+}
+
+fn doc_path_without_top_level_dirs(doc: Document) -> String {
+    let doc_ancestors: Vec<&Path> = doc.path.ancestors().collect();
+    let mut doc_ancestors_as_string: Vec<&str> = Vec::new();
+    for path in &doc_ancestors {
+        doc_ancestors_as_string.push(path.to_str().unwrap());
+    }
+
+    let path_without_initial = doc.path.to_str().unwrap().replace(
+        doc_ancestors_as_string[doc_ancestors_as_string.len() - 3],
+        "",
+    );
+    path_without_initial
 }
 
 fn dummy_to_run_menu() -> Result<PathBuf, String> {
@@ -148,7 +163,7 @@ fn main() -> io::Result<()> {
     let re3 = Regex::new(r"\d{1,}").unwrap();
 
     // let mut largest_index: i32 = 0;
-    let largest_index_path = String::new();
+    // let largest_index_path = String::new();
 
     println!(
         "Searching directory {}",
@@ -259,6 +274,7 @@ fn main() -> io::Result<()> {
     // }
 
     for document_list in indices_sorted.into_iter().rev() {
+        println!("");
         let to_print = "document index:".yellow();
         println!(
             "{} {}",
@@ -269,16 +285,18 @@ fn main() -> io::Result<()> {
         if document_list.len() > 1 {
             println!("{}", "index contains multiple documents!".red().bold());
             for doc in document_list {
+                let path_without_initial = doc_path_without_top_level_dirs(doc.clone());
                 let link = Link::new(
-                    doc.path.to_str().unwrap(),
+                    path_without_initial.as_str(),
                     doc.path.parent().unwrap().to_str().unwrap(),
                 );
                 println!("{}", link);
             }
         } else {
             let doc = document_list[0].clone();
+            let path_without_initial = doc_path_without_top_level_dirs(doc.clone());
             let link = Link::new(
-                doc.path.to_str().unwrap(),
+                path_without_initial.as_str(),
                 doc.path.parent().unwrap().to_str().unwrap(),
             );
             println!("{}", link);
