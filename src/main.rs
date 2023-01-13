@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::str::FromStr;
 use std::{
     collections::HashMap,
     io::{self, prelude::*},
@@ -62,7 +63,10 @@ fn dummy_to_run_menu() -> Result<PathBuf, String> {
         .filter_entry(|e| is_directory(e));
 
     let mut file_pick_menu_items = Vec::new();
+    file_pick_menu_items.push(button("Manually input folder path to search"));
+    file_pick_menu_items.push(label(""));
     file_pick_menu_items.push(label("Select folder"));
+    file_pick_menu_items.push(label(""));
 
     for item in projects {
         let dir_name = item.unwrap();
@@ -75,28 +79,41 @@ fn dummy_to_run_menu() -> Result<PathBuf, String> {
 
     run(&new_menu);
     let mm = mut_menu(&new_menu);
-    let dir_name = mm.selected_item_name();
+    let mut dir_name = mm.selected_item_name();
 
-    let projects2 = WalkDir::new(development_path)
-        .min_depth(1)
-        .max_depth(1)
-        .into_iter()
-        .filter_entry(|e| is_directory(e));
+    let mut user_input = String::new();
+    user_input.clear();
+    let stdin = io::stdin();
 
-    for item in projects2 {
-        let dir_name_check_option = item.unwrap();
-        let dir_name_check = dir_name_check_option
-            .path()
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap();
+    if dir_name == "Manually input folder path to search" {
+        println!("input path of family folder to be searched");
+        stdin.read_line(&mut user_input).unwrap();
+        println!("input: {}", user_input);
+        user_input = user_input.trim().replace("\"", "");
+        dir_name = user_input.as_str();
+        return Ok(PathBuf::from_str(dir_name).unwrap());
+    } else {
+        let projects2 = WalkDir::new(development_path)
+            .min_depth(1)
+            .max_depth(1)
+            .into_iter()
+            .filter_entry(|e| is_directory(e));
 
-        if dir_name_check == dir_name {
-            return Ok(dir_name_check_option.into_path());
+        for item in projects2 {
+            let dir_name_check_option = item.unwrap();
+            let dir_name_check = dir_name_check_option
+                .path()
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap();
+
+            if dir_name_check == dir_name {
+                return Ok(dir_name_check_option.into_path());
+            }
         }
+        Err("path not found".to_string())
     }
-    Err("path not found".to_string())
 }
 
 fn main() -> io::Result<()> {
@@ -125,6 +142,7 @@ fn main() -> io::Result<()> {
 
     match user_input.trim() {
         "1.5.1" => re2 = Regex::new(r"PackagingSelection\d{1,}").unwrap(),
+        // note that usability assment naming is changing in future
         "2.1" => re2 = Regex::new(r"UsabilityAssess\d{1,}").unwrap(),
         "3.2.1" => re2 = Regex::new(r"TheoreticalReview\d{1,}").unwrap(),
         "3.2.2" => re2 = Regex::new(r"PeerReview\d{1,}").unwrap(),
@@ -149,25 +167,13 @@ fn main() -> io::Result<()> {
         }
     }
 
-    let mut user_input = String::new();
-    user_input.clear();
-
     let directory_to_search = dummy_to_run_menu();
 
-    // println!("input path of family folder to be searched");
-
-    // stdin.read_line(&mut user_input)?;
-
-    // println!("input: {}", user_input);
-    // remove quotes
     let re3 = Regex::new(r"\d{1,}").unwrap();
-
-    // let mut largest_index: i32 = 0;
-    // let largest_index_path = String::new();
 
     println!(
         "Searching directory {}",
-        directory_to_search.as_ref().unwrap().to_str().unwrap()
+        directory_to_search.as_ref().unwrap().display()
     );
 
     let mut docs: Vec<Document> = Vec::new();
@@ -184,18 +190,16 @@ fn main() -> io::Result<()> {
     .filter_map(|file| file.ok())
     .filter(|file| file.path().to_str().unwrap().contains(".docx"))
     .filter(|file| !file.path().to_str().unwrap().contains("_Archive"))
+    .filter(|f| !f.path().to_str().unwrap().contains("~$"))
     {
         if file.metadata().unwrap().is_file() && re2.is_match(file.path().to_str().unwrap()) {
-            // println!("{}", file.path().display());
             let file_path = file.path().to_owned();
-            // println!("found: {}", file.path().display());
             let file_name = file.file_name().to_str().unwrap();
 
             let val = re2.find(file_name).unwrap();
             let doc_name_and_number = &file_name[val.start()..val.end()];
             let val2 = re3.find(doc_name_and_number).unwrap();
             let doc_number = &doc_name_and_number[val2.start()..val2.end()];
-            // println!("{}", doc_number);
 
             let doc_number_int: i32 = doc_number.parse().unwrap();
 
@@ -205,45 +209,12 @@ fn main() -> io::Result<()> {
             };
 
             docs.push(doc)
-            // consumed_doc_numbers.push(doc_number_int);
-
-            // println!("doc number as int: {}", doc_number_int);
-
-            // if consumed_doc_numbers.contains(&doc_number_int) {
-            //     println!("conflicting docs found")
-            // } else if doc_number_int > largest_index {
-            //     largest_index = doc_number_int;
-            //     println!("new largest doc index: {}", doc_number);
-            //     largest_index_path = file.path().display().to_string();
-            // }
         }
     }
 
     let mut indices: HashMap<i32, Vec<Document>> = HashMap::new();
-    // let mut indices: Vec<(i32, Vec<Document>)> = Vec::new();
 
     for doc in docs {
-        // println!(
-        //     "found doc: {}",
-        //     doc.path.file_name().unwrap().to_str().unwrap()
-        // );
-        // println!("with doc number {}", doc.index);
-        // println!("with path {}", doc.path.display());
-        // println!("");
-
-        // let mut exists_in_vector = false;
-
-        // for item in &indices {
-        //     if item.0 == doc.index {
-        //         item.1.push(doc.clone());
-        //         exists_in_vector = true;
-        //     }
-        // }
-        //
-        // if !exists_in_vector {
-        //     indices.push((doc.index, vec![doc.clone()]));
-        // }
-
         if indices.contains_key(&doc.index) {
             let mut temp_vec = indices[&doc.index].clone();
             temp_vec.push(doc.clone());
@@ -258,22 +229,14 @@ fn main() -> io::Result<()> {
     let largest_index = binding.iter().max_by_key(|x| x.0);
     let mut largest_index_for_sorting: i32;
 
-    // let indices_iter = indices.iter();
+    let mut indices_with_error: Vec<i32> = Vec::new();
 
     while indices.iter().len() > 0 {
         largest_index_for_sorting = *indices.iter().max_by_key(|x| x.0).unwrap().0;
         indices_sorted.push(indices.remove(&largest_index_for_sorting).unwrap());
-        // println!("sorting");
     }
 
-    // for (index, docs) in indices.iter() {
-    //     println!("documents at index: {}", index);
-    //     for doc in docs.clone() {
-    //         println!("{}", doc.path.display());
-    //     }
-    // }
-
-    for document_list in indices_sorted.into_iter().rev() {
+    for document_list in indices_sorted.iter().rev() {
         println!("");
         let to_print = "document index:".yellow();
         println!(
@@ -284,28 +247,55 @@ fn main() -> io::Result<()> {
 
         if document_list.len() > 1 {
             println!("{}", "index contains multiple documents!".red().bold());
+            indices_with_error.push(document_list[0].index);
             for doc in document_list {
-                let path_without_initial = doc_path_without_top_level_dirs(doc.clone());
+                // let path_without_initial = doc_path_without_top_level_dirs(doc.clone());
                 let link = Link::new(
-                    path_without_initial.as_str(),
+                    // path_without_initial.as_str(),
+                    doc.path.to_str().unwrap(),
                     doc.path.parent().unwrap().to_str().unwrap(),
                 );
                 println!("{}", link);
             }
         } else {
             let doc = document_list[0].clone();
-            let path_without_initial = doc_path_without_top_level_dirs(doc.clone());
+            // let path_without_initial = doc_path_without_top_level_dirs(doc.clone());
+
             let link = Link::new(
-                path_without_initial.as_str(),
+                // path_without_initial.as_str(),
+                doc.path.to_str().unwrap(),
                 doc.path.parent().unwrap().to_str().unwrap(),
             );
             println!("{}", link);
         }
     }
 
+    let num_errors = indices_with_error.len();
+    println!("=========================================================================");
+
+    if num_errors > 0 {
+        println!("{}", "document numbering errors detected!".red().bold());
+        println!("=====================================================================");
+        println!("number of doubled up indices detected: {}", num_errors);
+
+        for document_list in indices_sorted.iter().rev() {
+            if indices_with_error.contains(&document_list[0].index) {
+                println!("index {}", document_list[0].index);
+                for document in document_list {
+                    println!("{}", document.path.display());
+                }
+            }
+        }
+        println!("");
+    }
+
     println!("");
-    println!("================================================================================================");
+    println!("=========================================================================");
     println!("largest document index: {}", largest_index.unwrap().0);
+    println!(
+        "suggested index for next document: {}",
+        largest_index.unwrap().0 + 1
+    );
 
     pause();
 
