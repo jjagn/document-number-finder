@@ -128,6 +128,7 @@ fn main() -> io::Result<()> {
         button("3.5.3 -> Feedback Summary"),
         button("3.7.1 -> Biocompatibility Claim"),
         button("3.7.2 -> Cleaning Sterilisation Claim"),
+        button("All equivalence claims"),
     ]);
 
     run(&menu);
@@ -141,16 +142,17 @@ fn main() -> io::Result<()> {
     let mut re2 = Regex::new("").unwrap();
 
     match user_input.trim() {
-        "1.5.1" => re2 = Regex::new(r"PackagingSelection\d{1,}").unwrap(),
+        "1.5.1" => re2 = Regex::new(r"PackagingSelection\d+").unwrap(),
         // note that usability assment naming is changing in future
-        "2.1" => re2 = Regex::new(r"UsabilityAssess\d{1,}").unwrap(),
-        "3.2.1" => re2 = Regex::new(r"TheoreticalReview\d{1,}").unwrap(),
-        "3.2.2" => re2 = Regex::new(r"PeerReview\d{1,}").unwrap(),
-        "3.3" => re2 = Regex::new(r"DesignEquivClaim\d{1,}").unwrap(),
-        "3.4" => re2 = Regex::new(r"TestReport\d{1,}").unwrap(),
-        "3.5.3" => re2 = Regex::new(r"FeedbackSummary\d{1,}").unwrap(),
-        "3.7.1" => re2 = Regex::new(r"BiocompClaim\d{1,}").unwrap(),
-        "3.7.2" => re2 = Regex::new(r"CleaningSteriClaim\d{1,}").unwrap(),
+        "2.1" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
+        "3.2.1" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
+        "3.2.2" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
+        "3.3" => re2 = Regex::new(r"DesignEquivClaim\d+").unwrap(),
+        "3.4" => re2 = Regex::new(r"TestReport\d+").unwrap(),
+        "3.5.3" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
+        "3.7.1" => re2 = Regex::new(r"BiocompClaim\d+").unwrap(),
+        "3.7.2" => re2 = Regex::new(r"CleaningSteriClaim\d+").unwrap(),
+        "All" => re2 = Regex::new(r"\D+Claim\d+").unwrap(),
         // "h" | "H" => {
         //     println!("1.5.1 -> Packaging Selection");
         //     println!("2.1 -> Usability Assessment");
