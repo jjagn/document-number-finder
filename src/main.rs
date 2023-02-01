@@ -123,11 +123,11 @@ fn main() -> io::Result<()> {
         button("2.1 -> Usability Assessment"),
         button("3.2.1 -> Theoretical Review"),
         button("3.2.2 -> Peer Review"),
-        button("3.3 -> Design Equivalence Claim"),
+        // button("3.3 -> Design Equivalence Claim"),
         button("3.4 -> Test Report"),
         button("3.5.3 -> Feedback Summary"),
-        button("3.7.1 -> Biocompatibility Claim"),
-        button("3.7.2 -> Cleaning Sterilisation Claim"),
+        button("3.7.1 -> Biocompatibility Assessment"),
+        // button("3.7.2 -> Cleaning Sterilisation Claim"),
         button("All equivalence claims"),
     ]);
 
@@ -147,12 +147,12 @@ fn main() -> io::Result<()> {
         "2.1" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
         "3.2.1" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
         "3.2.2" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
-        "3.3" => re2 = Regex::new(r"DesignEquivClaim\d+").unwrap(),
+        // "3.3" => re2 = Regex::new(r"DesignEquivClaim\d+").unwrap(),
         "3.4" => re2 = Regex::new(r"TestReport\d+").unwrap(),
         "3.5.3" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
-        "3.7.1" => re2 = Regex::new(r"BiocompClaim\d+").unwrap(),
-        "3.7.2" => re2 = Regex::new(r"CleaningSteriClaim\d+").unwrap(),
-        "All" => re2 = Regex::new(r"\D+Claim\d+").unwrap(),
+        "3.7.1" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
+        // "3.7.2" => re2 = Regex::new(r"CleaningSteriClaim\d+").unwrap(),
+        "All" => re2 = Regex::new(r"\D+Claim\d+|\D+BiocompAssess\d+").unwrap(),
         // "h" | "H" => {
         //     println!("1.5.1 -> Packaging Selection");
         //     println!("2.1 -> Usability Assessment");
@@ -232,6 +232,7 @@ fn main() -> io::Result<()> {
     let mut largest_index_for_sorting: i32;
 
     let mut indices_with_error: Vec<i32> = Vec::new();
+    let mut all_indices: Vec<i32> = Vec::new();
 
     while indices.iter().len() > 0 {
         largest_index_for_sorting = *indices.iter().max_by_key(|x| x.0).unwrap().0;
@@ -241,6 +242,7 @@ fn main() -> io::Result<()> {
     for document_list in indices_sorted.iter().rev() {
         println!("");
         let to_print = "document index:".yellow();
+        all_indices.push(document_list[0].index);
         println!(
             "{} {}",
             to_print,
@@ -291,14 +293,34 @@ fn main() -> io::Result<()> {
         println!("");
     }
 
+    let mut last_index = 0;
+    let mut skipped_indices: Vec<i32> = Vec::new();
+
+    for index in all_indices.iter() {
+        if *index > last_index + 1 {
+            skipped_indices.push(*index);
+        }
+    }
+
+    if skipped_indices.len() > 0 {
+        println!("indices skipped!");
+        for skipped_index in skipped_indices.iter() {
+            println!("index {} skipped", skipped_index);
+        }
+    }
+
     println!("");
     println!("=========================================================================");
     println!("largest document index: {}", largest_index.unwrap().0);
+
     println!(
         "suggested index for next document: {}",
         largest_index.unwrap().0 + 1
     );
 
+    if skipped_indices.len() > 0 {
+        println!("OR lowest unused/skipped index: {}", skipped_indices[0]);
+    }
     pause();
 
     Ok(())
