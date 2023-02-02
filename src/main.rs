@@ -152,7 +152,7 @@ fn main() -> io::Result<()> {
         "3.5.3" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
         "3.7.1" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
         // "3.7.2" => re2 = Regex::new(r"CleaningSteriClaim\d+").unwrap(),
-        "All" => re2 = Regex::new(r"\D+Claim\d+|\D+BiocompAssess\d+").unwrap(),
+        "All" => re2 = Regex::new(r"\D+Claim\d+").unwrap(),
         // "h" | "H" => {
         //     println!("1.5.1 -> Packaging Selection");
         //     println!("2.1 -> Usability Assessment");
@@ -293,13 +293,21 @@ fn main() -> io::Result<()> {
         println!("");
     }
 
-    let mut last_index = 0;
+    let mut last_index = 1;
     let mut skipped_indices: Vec<i32> = Vec::new();
 
     for index in all_indices.iter() {
+        // println!("index: {}", index);
         if *index > last_index + 1 {
-            skipped_indices.push(*index);
+            // println!("last index: {}", last_index);
+            // println!("current index: {}", *index);
+            let mut skipped_index = last_index + 1;
+            while skipped_index < *index {
+                skipped_indices.push(skipped_index);
+                skipped_index += 1;
+            }
         }
+        last_index = *index;
     }
 
     if skipped_indices.len() > 0 {
