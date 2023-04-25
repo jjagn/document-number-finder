@@ -293,29 +293,29 @@ fn main() -> io::Result<()> {
         println!("");
     }
 
-    let mut last_index = 1;
-    let mut skipped_indices: Vec<i32> = Vec::new();
-
-    for index in all_indices.iter() {
-        // println!("index: {}", index);
-        if *index > last_index + 1 {
-            // println!("last index: {}", last_index);
-            // println!("current index: {}", *index);
-            let mut skipped_index = last_index + 1;
-            while skipped_index < *index {
-                skipped_indices.push(skipped_index);
-                skipped_index += 1;
-            }
-        }
-        last_index = *index;
-    }
-
-    if skipped_indices.len() > 0 {
-        println!("indices skipped!");
-        for skipped_index in skipped_indices.iter() {
-            println!("index {} skipped", skipped_index);
-        }
-    }
+    // let mut last_index = 1;
+    // let mut skipped_indices: Vec<i32> = Vec::new();
+    //
+    // for index in all_indices.iter() {
+    //     // println!("index: {}", index);
+    //     if *index > last_index + 1 {
+    //         // println!("last index: {}", last_index);
+    //         // println!("current index: {}", *index);
+    //         let mut skipped_index = last_index + 1;
+    //         while skipped_index < *index {
+    //             skipped_indices.push(skipped_index);
+    //             skipped_index += 1;
+    //         }
+    //     }
+    //     last_index = *index;
+    // }
+    //
+    // if skipped_indices.len() > 0 {
+    //     println!("indices skipped!");
+    //     for skipped_index in skipped_indices.iter() {
+    //         println!("index {} skipped", skipped_index);
+    //     }
+    // }
 
     println!("");
     println!("=========================================================================");
@@ -326,9 +326,9 @@ fn main() -> io::Result<()> {
         largest_index.unwrap().0 + 1
     );
 
-    if skipped_indices.len() > 0 {
-        println!("OR lowest unused/skipped index: {}", skipped_indices[0]);
-    }
+    // if skipped_indices.len() > 0 {
+    //     println!("OR lowest unused/skipped index: {}", skipped_indices[0]);
+    // }
     pause();
 
     Ok(())
