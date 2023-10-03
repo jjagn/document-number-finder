@@ -3,10 +3,15 @@ use std::str::FromStr;
 use std::{collections::HashMap, io, path::PathBuf};
 use terminal_link::Link;
 
+use inquire::{
+    autocompletion::{Autocomplete, Replacement},
+    CustomUserError, Text,
+};
+
 use colored::*;
 
 use regex::Regex;
-use terminal_menu::{button, label, menu, mut_menu, run};
+// use terminal_menu::{button, label, menu, mut_menu, run};
 use walkdir::{DirEntry, WalkDir};
 
 // import and create modules
@@ -20,37 +25,58 @@ pub mod terminal_gui;
 
 extern crate walkdir;
 
-fn main() -> io::Result<()> {
-    let menu = menu(vec![
-        label("select document code:"),
-        button("1.5.1 -> Packaging Selection"),
-        button("2.1 -> Usability Assessment"),
-        button("3.2.1 -> Theoretical Review"),
-        button("3.2.2 -> Peer Review"),
-        button("3.4 -> Test Report"),
-        button("3.5.3 -> Feedback Summary"),
-        button("3.7.1 -> Biocompatibility Assessment"),
-        button("All equivalence claims"),
-    ]);
+#[derive(Clone, Default)]
+pub struct FileTypeCompleter {
+    input: String,
+    docs: Vec<String>,
+    lcp: String,
+}
 
-    run(&menu);
-    let mm = mut_menu(&menu);
-    let user_input = mm
-        .selected_item_name()
-        .split_whitespace()
-        .next()
-        .unwrap_or("");
+fn main() -> io::Result<()> {
+    // let menu = menu(vec![
+    //     label("select document code:"),
+    //     button("1.5.1 -> Packaging Selection"),
+    //     button("2.1 -> Usability Assessment"),
+    //     button("3.2.1 -> Theoretical Review"),
+    //     button("3.2.2 -> Peer Review"),
+    //     button("3.4 -> Test Report"),
+    //     button("3.5.3 -> Feedback Summary"),
+    //     button("3.7.1 -> Biocompatibility Assessment"),
+    //     button("All equivalence claims"),
+    // ]);
+
+    // run(&menu);
+    // let mm = mut_menu(&menu);
+    // let user_input = mm
+    //     .selected_item_name()
+    //     .split_whitespace()
+    //     .next()
+    //     .unwrap_or("");
+    let help_message =
+        "Start typing the document type you'd like to search. Tab to autocomplete, arrow keys to select, then enter to submit.";
+
+    let user_input = Text::new("Document to search for:")
+        .with_autocomplete(FileTypeCompleter::default())
+        // .with_help_message(&help_message)
+        .prompt();
+
+    let input = match user_input {
+        Ok(input) => input,
+        Err(error) => "error!".to_string(),
+    };
 
     let mut re2 = Regex::new("").unwrap();
 
-    match user_input.trim() {
-        "1.5.1" => re2 = Regex::new(r"PackagingSelection\d+").unwrap(),
-        "2.1" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
-        "3.2.1" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
-        "3.2.2" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
-        "3.4" => re2 = Regex::new(r"TestReport\d+").unwrap(),
-        "3.5.3" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
-        "3.7.1" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
+    // println!("{}", input.trim());
+
+    match input.trim() {
+        "1.5.1 Packaging Selection" => re2 = Regex::new(r"PackagingSelection\d+").unwrap(),
+        "2.1 Usability Assessment" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
+        "3.2.1 Theoretical Review" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
+        "3.2.2 Peer Review" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
+        "3.4 Test Report" => re2 = Regex::new(r"TestReport\d+").unwrap(),
+        "3.5.3 Feedback Summary" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
+        "3.7.1 Biocompatibility Assessment" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
         "All" => re2 = Regex::new(r"\D+Claim\d+").unwrap(),
         _ => {
             println!("document number not recognised");
@@ -193,4 +219,101 @@ fn main() -> io::Result<()> {
     pause();
 
     Ok(())
+}
+
+impl FileTypeCompleter {
+    fn update_input(&mut self, input: &str) -> Result<(), CustomUserError> {
+        if input == self.input {
+            return Ok(());
+        }
+
+        let entries = vec![
+            "1.5.1 Packaging Selection",
+            "2.1 Usability Assessment",
+            "3.2.1 Theoretical Review",
+            "3.2.2 Peer Review",
+            "3.4 Test Report",
+            "3.5.3 Feedback Summary",
+            "3.7.1 Biocompatibility Assessment",
+            "All equivalence claims",
+        ];
+
+        self.input = input.to_owned();
+        self.docs.clear();
+
+        let mut idx = 0;
+        let limit = 15;
+
+        while idx < entries.len() && self.docs.len() < limit {
+            let entry_address = entries.get(idx).unwrap();
+
+            let entry = entry_address.to_string();
+
+            // autocomplete matching logic
+            // if entry.starts_with(&self.input) && entry.len() != self.input.len() {
+            //     self.docs.push(entry);
+            // }
+
+            if entry.to_lowercase().contains(&self.input.to_lowercase())
+                && entry.len() != self.input.len()
+            {
+                self.docs.push(entry);
+            }
+
+            idx = idx.saturating_add(1);
+        }
+
+        self.lcp = self.longest_common_prefix();
+
+        Ok(())
+    }
+
+    fn longest_common_prefix(&self) -> String {
+        let mut ret: String = String::new();
+
+        let mut sorted = self.docs.clone();
+        sorted.sort();
+        if sorted.is_empty() {
+            return ret;
+        }
+
+        let mut first_word = sorted.first().unwrap().chars();
+        let mut last_word = sorted.last().unwrap().chars();
+
+        loop {
+            match (first_word.next(), last_word.next()) {
+                (Some(c1), Some(c2)) if c1 == c2 => {
+                    ret.push(c1);
+                }
+                _ => return ret,
+            }
+        }
+    }
+}
+
+impl Autocomplete for FileTypeCompleter {
+    fn get_suggestions(&mut self, input: &str) -> Result<Vec<String>, CustomUserError> {
+        self.update_input(input)?;
+
+        Ok(self.docs.clone())
+    }
+
+    fn get_completion(
+        &mut self,
+        input: &str,
+        highlighted_suggestion: Option<String>,
+    ) -> Result<Replacement, CustomUserError> {
+        self.update_input(input)?;
+
+        Ok(match highlighted_suggestion {
+            Some(suggestion) => Replacement::Some(suggestion),
+            None => match self.lcp.is_empty() {
+                true => match self.docs.first() {
+                    Some(doc) => Replacement::Some(doc.to_string()),
+                    None => Replacement::None,
+                },
+                false => Replacement::Some(self.lcp.clone()),
+            },
+        })
+    }
 }
