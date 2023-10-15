@@ -77,7 +77,7 @@ fn main() -> io::Result<()> {
         "3.4 Test Report" => re2 = Regex::new(r"TestReport\d+").unwrap(),
         "3.5.3 Feedback Summary" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
         "3.7.1 Biocompatibility Assessment" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
-        "All equivalence claims" => re2 = Regex::new(r"\D+Claim\d+").unwrap(),
+        "All equivalence claims (Cleaning, Design)" => re2 = Regex::new(r"\D+Claim\d+").unwrap(),
         _ => {
             println!("document number not recognised");
         }
@@ -235,7 +235,7 @@ impl FileTypeCompleter {
             "3.4 Test Report",
             "3.5.3 Feedback Summary",
             "3.7.1 Biocompatibility Assessment",
-            "All equivalence claims",
+            "All equivalence claims (Cleaning, Design)",
         ];
 
         self.input = input.to_owned();
