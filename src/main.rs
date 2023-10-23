@@ -23,7 +23,11 @@ pub mod document;
 pub mod helpers;
 pub mod terminal_gui;
 
+extern crate clipboard;
 extern crate walkdir;
+
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
 
 #[derive(Clone, Default)]
 pub struct FileTypeCompleter {
@@ -52,34 +56,48 @@ fn main() -> io::Result<()> {
     //     .split_whitespace()
     //     .next()
     //     .unwrap_or("");
-    let help_message =
+    let _help_message =
         "Start typing the document type you'd like to search. Tab to autocomplete, arrow keys to select, then enter to submit.";
 
-    let user_input = Text::new("Document to search for:")
-        .with_autocomplete(FileTypeCompleter::default())
-        // .with_help_message(&help_message)
-        .prompt();
-
-    let input = match user_input {
-        Ok(input) => input,
-        Err(error) => "error!".to_string(),
-    };
+    let mut doc_matched: bool = false;
 
     let mut re2 = Regex::new("").unwrap();
+    let mut clipboard_string = "";
 
-    // println!("{}", input.trim());
+    while !doc_matched {
+        doc_matched = true;
 
-    match input.trim() {
-        "1.5.1 Packaging Selection" => re2 = Regex::new(r"PackagingSelection\d+").unwrap(),
-        "2.1 Usability Assessment" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
-        "3.2.1 Theoretical Review" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
-        "3.2.2 Peer Review" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
-        "3.4 Test Report" => re2 = Regex::new(r"TestReport\d+").unwrap(),
-        "3.5.3 Feedback Summary" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
-        "3.7.1 Biocompatibility Assessment" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
-        "All equivalence claims (Cleaning, Design)" => re2 = Regex::new(r"\D+Claim\d+").unwrap(),
-        _ => {
-            println!("document number not recognised");
+        let user_input = Text::new("Document to search for:")
+            .with_autocomplete(FileTypeCompleter::default())
+            // .with_help_message(&help_message)
+            .prompt();
+
+        let input = match user_input {
+            Ok(input) => input,
+            Err(_error) => "error!".to_string(),
+        };
+
+        println!("{}", input);
+
+        match input.trim() {
+            "1.5.1 Packaging Selection" => {
+                re2 = Regex::new(r"PackagingSelection\d+").unwrap();
+                clipboard_string = "1.5.1_PackagingSelectionZ_TechFileName_SubFamily_RevX";
+            }
+            "2.1 Usability Assessment" => re2 = Regex::new(r"UsabilityAssess\D+\d+").unwrap(),
+            "3.2.1 Theoretical Review" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
+            "3.2.2 Peer Review" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
+            "3.4 Test Report" => re2 = Regex::new(r"TestReport\d+").unwrap(),
+            "3.5.3 Feedback Summary" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
+            "3.7.1 Biocompatibility Assessment" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
+            "All equivalence claims (Cleaning, Design)" => {
+                re2 = Regex::new(r"\D+Claim\d+").unwrap()
+            }
+            "q" => std::process::exit(0),
+            _ => {
+                println!("That doc format couldn't be found. Please try again");
+                doc_matched = false;
+            }
         }
     }
 
@@ -102,6 +120,7 @@ fn main() -> io::Result<()> {
             .trim()
             .replace("\"", ""),
     )
+    .follow_links(true)
     .into_iter()
     .filter_map(|file| file.ok())
     .filter(|file| file.path().to_str().unwrap().contains(".docx"))
@@ -216,7 +235,20 @@ fn main() -> io::Result<()> {
         largest_index.unwrap().0 + 1
     );
 
-    pause();
+    // Create a clipboard context
+    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+
+    // process clipboard string
+    clipboard_string = clipboard_string.replace("Z", largest_index.unwrap());
+
+    // Attempt to set the clipboard contents
+    if let Err(err) = ctx.set_contents(clipboard_string.to_owned()) {
+        eprintln!("Error copying text to clipboard: {:?}", err);
+    } else {
+        println!("Text copied to clipboard: {}", text_to_copy);
+    }
+
+    _ = main();
 
     Ok(())
 }

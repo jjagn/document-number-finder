@@ -1,9 +1,6 @@
 use crate::{is_directory, FromStr, PathBuf};
-use std::io;
-use terminal_menu::*;
-use walkdir::{DirEntry, WalkDir};
 
-use std::io::ErrorKind;
+use walkdir::WalkDir;
 
 use inquire::{
     autocompletion::{Autocomplete, Replacement},
@@ -19,7 +16,7 @@ pub struct FilePathCompleter {
 
 pub fn dummy_to_run_menu() -> Result<PathBuf, String> {
     let development_path = "H:\\Development";
-    let projects = WalkDir::new(development_path)
+    let _projects = WalkDir::new(development_path)
         .min_depth(1)
         .max_depth(1)
         .into_iter()
@@ -49,7 +46,7 @@ pub fn dummy_to_run_menu() -> Result<PathBuf, String> {
 
     // let current_dir = std::env::current_dir().unwrap();
     let current_dir = PathBuf::from_str(development_path).unwrap();
-    let help_message = format!("Current directory: {}", current_dir.to_string_lossy());
+    let _help_message = format!("Current directory: {}", current_dir.to_string_lossy());
 
     let ans = Text::new("Development Folder to search:")
         .with_autocomplete(FilePathCompleter::default())
