@@ -237,7 +237,7 @@ impl FileTypeCompleter {
             "3.4 Test Report",
             "3.5.3 Feedback Summary",
             "3.7.1 Biocompatibility Assessment",
-            "All equivalence claims (Cleaning, Design)",
+            "All equivalence claims (Cleaning, Design, Biocomp)",
         ];
 
         self.input = input.to_owned();
