@@ -1,3 +1,4 @@
+use egui::TextBuffer;
 use std::env;
 use std::path::Path;
 use std::str::FromStr;
@@ -35,47 +36,89 @@ pub struct FileTypeCompleter {
 
 fn main() -> io::Result<()> {
     // let args: Vec<String> = env::args().collect();
+    println!("Drag the dhf you'd like to search to this window, then press enter");
     let mut input = String::new();
     match io::stdin().read_line(&mut input) {
-        Ok(n) => {
-            println!("{} bytes read", n);
-            println!("{}", input);
+        Ok(_) => {
+            println!("{} will be searched", input);
         }
         Err(error) => println!("error: {error}"),
     }
 
     let development_path = input;
 
-    let help_message =
-        "Start typing the document type you'd like to search. Tab to autocomplete, arrow keys to select, then enter to submit.";
+    // let help_message = "Start typing the document type you'd like to search. Tab to autocomplete, arrow keys to select, then enter to submit.";
 
-    let user_input = Text::new("Document to search for:")
-        .with_autocomplete(FileTypeCompleter::default())
-        // .with_help_message(&help_message)
-        .prompt();
-
-    let input = match user_input {
-        Ok(input) => input,
-        Err(error) => "error!".to_string(),
-    };
+    let mut successful_match = false;
 
     let mut re2 = Regex::new("").unwrap();
 
-    // println!("{}", input.trim());
+    while !successful_match {
+        successful_match = true;
+        let user_input = Text::new("Document to search for:")
+            .with_autocomplete(FileTypeCompleter::default())
+            // .with_help_message(&help_message)
+            .prompt();
 
-    match input.trim() {
-        "1.5.1 Packaging Selection" => re2 = Regex::new(r"PackagingSelection\d+").unwrap(),
-        "2.1 Usability Assessment" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
-        "3.2.1 Theoretical Review" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
-        "3.2.2 Peer Review" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
-        "3.4 Test Report" => re2 = Regex::new(r"TestReport\d+").unwrap(),
-        "3.5.3 Feedback Summary" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
-        "3.7.1 Biocompatibility Assessment" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
-        "All equivalence claims (Cleaning, Design, Biocomp)" => {
-            re2 = Regex::new(r"\D+Claim\d+").unwrap()
-        }
-        _ => {
-            println!("document number not recognised");
+        let mut doc_input = match user_input {
+            Ok(doc_input) => doc_input,
+            Err(_) => "error!".to_string(),
+        };
+
+        match doc_input.trim() {
+            "1.5.1 Packaging Selection" => re2 = Regex::new(r"PackagingSelection\d+").unwrap(),
+            "2.1 Usability Assessment" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
+            "3.2.1 Theoretical Review" => re2 = Regex::new(r"TheoreticalReview\d+").unwrap(),
+            "3.2.2 Peer Review" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
+            "3.4 Test Report" => re2 = Regex::new(r"TestReport\d+").unwrap(),
+            "3.5.3 Feedback Summary" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
+            "3.7.1 Biocompatibility Assessment" => re2 = Regex::new(r"BiocompAssess\d+").unwrap(),
+            "All equivalence claims (Cleaning, Design, Biocomp)" => {
+                re2 = Regex::new(r"\D+Claim\d+").unwrap()
+            }
+            _ => {
+                println!("document not recognised");
+                let possible_matches = vec![
+                    "1.5.1 Packaging Selection",
+                    "2.1 Usability Assessment",
+                    "3.2.1 Theoretical Review",
+                    "3.2.2 Peer Review",
+                    "3.4 Test Report",
+                    "3.5.3 Feedback Summary",
+                    "3.7.1 Biocompatibility Assessment",
+                    "All equivalence claims (Cleaning, Design, Biocomp)",
+                ];
+
+                println!("{}", doc_input);
+
+                for item in possible_matches.into_iter() {
+                    println!("{}", item);
+                    if item.to_lowercase().contains(&doc_input) {
+                        doc_input = item.to_string();
+                        println!("falling back to first matched: {}", doc_input);
+                    }
+                }
+
+                match doc_input.as_str() {
+                    "1.5.1 Packaging Selection" => {
+                        re2 = Regex::new(r"PackagingSelection\d+").unwrap()
+                    }
+                    "2.1 Usability Assessment" => re2 = Regex::new(r"UsabilityAssess\d+").unwrap(),
+                    "3.2.1 Theoretical Review" => {
+                        re2 = Regex::new(r"TheoreticalReview\d+").unwrap()
+                    }
+                    "3.2.2 Peer Review" => re2 = Regex::new(r"PeerReview\d+").unwrap(),
+                    "3.4 Test Report" => re2 = Regex::new(r"TestReport\d+").unwrap(),
+                    "3.5.3 Feedback Summary" => re2 = Regex::new(r"FeedbackSummary\d+").unwrap(),
+                    "3.7.1 Biocompatibility Assessment" => {
+                        re2 = Regex::new(r"BiocompAssess\d+").unwrap()
+                    }
+                    "All equivalence claims (Cleaning, Design, Biocomp)" => {
+                        re2 = Regex::new(r"\D+Claim\d+").unwrap()
+                    }
+                    _ => successful_match = false,
+                }
+            }
         }
     }
 
