@@ -247,14 +247,26 @@ fn main() -> io::Result<()> {
         println!("");
     }
 
-    println!("");
-    println!("=========================================================================");
-    println!("largest document index: {}", largest_index.unwrap().0);
+    let largest_index_unwrapped = match largest_index {
+        Some(x) => *x.0,
+        None => 0,
+    };
 
-    println!(
-        "suggested index for next document: {}",
-        largest_index.unwrap().0 + 1
-    );
+    if largest_index_unwrapped >= 1 {
+        println!("");
+        println!("=========================================================================");
+        println!("largest document index: {}", largest_index_unwrapped);
+
+        println!(
+            "suggested index for next document: {}",
+            largest_index_unwrapped + 1
+        );
+    } else {
+        println!("");
+        println!("=========================================================================");
+        println!("no docs of the type you're searching for were found");
+        println!("suggested index for next document: 1");
+    }
 
     pause();
 
