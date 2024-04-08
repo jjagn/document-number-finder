@@ -17,13 +17,14 @@ pub struct FilePathCompleter {
     lcp: String,
 }
 
-pub fn dummy_to_run_menu() -> Result<PathBuf, String> {
-    let development_path = "H:\\Development";
-    let projects = WalkDir::new(development_path)
-        .min_depth(1)
-        .max_depth(1)
-        .into_iter()
-        .filter_entry(|e| is_directory(e));
+pub fn dummy_to_run_menu(development_path: &String) -> Result<PathBuf, String> {
+    // let development_path = "C:\\Users\\Jackson\\OneDrive - ENZTEC\\Product Documentation";
+    println!("{}", *development_path);
+    // let projects = WalkDir::new(development_path)
+    //     .min_depth(1)
+    //     .max_depth(1)
+    //     .into_iter()
+    //     .filter_entry(|e| is_directory(e));
 
     // let mut file_pick_menu_items = Vec::new();
     // file_pick_menu_items.push(button("Manually input folder path to search"));
@@ -48,7 +49,7 @@ pub fn dummy_to_run_menu() -> Result<PathBuf, String> {
     // let stdin = io::stdin();
 
     // let current_dir = std::env::current_dir().unwrap();
-    let current_dir = PathBuf::from_str(development_path).unwrap();
+    let current_dir = PathBuf::from_str(development_path.as_str()).unwrap();
     let help_message = format!("Current directory: {}", current_dir.to_string_lossy());
 
     let ans = Text::new("Development Folder to search:")
@@ -120,7 +121,7 @@ impl FilePathCompleter {
         //     fallback_parent.clone()
         // };
 
-        let scan_dir = "H:\\Development";
+        let scan_dir = "C:\\Users\\Jackson\\OneDrive - ENZTEC\\Product Documentation";
 
         let entries = match std::fs::read_dir(scan_dir) {
             Ok(read_dir) => Ok(read_dir),

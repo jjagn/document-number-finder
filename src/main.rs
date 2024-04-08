@@ -1,3 +1,4 @@
+use std::env;
 use std::path::Path;
 use std::str::FromStr;
 use std::{collections::HashMap, io, path::PathBuf};
@@ -33,25 +34,18 @@ pub struct FileTypeCompleter {
 }
 
 fn main() -> io::Result<()> {
-    // let menu = menu(vec![
-    //     label("select document code:"),
-    //     button("1.5.1 -> Packaging Selection"),
-    //     button("2.1 -> Usability Assessment"),
-    //     button("3.2.1 -> Theoretical Review"),
-    //     button("3.2.2 -> Peer Review"),
-    //     button("3.4 -> Test Report"),
-    //     button("3.5.3 -> Feedback Summary"),
-    //     button("3.7.1 -> Biocompatibility Assessment"),
-    //     button("All equivalence claims"),
-    // ]);
+    // let args: Vec<String> = env::args().collect();
+    let mut input = String::new();
+    match io::stdin().read_line(&mut input) {
+        Ok(n) => {
+            println!("{} bytes read", n);
+            println!("{}", input);
+        }
+        Err(error) => println!("error: {error}"),
+    }
 
-    // run(&menu);
-    // let mm = mut_menu(&menu);
-    // let user_input = mm
-    //     .selected_item_name()
-    //     .split_whitespace()
-    //     .next()
-    //     .unwrap_or("");
+    let development_path = input;
+
     let help_message =
         "Start typing the document type you'd like to search. Tab to autocomplete, arrow keys to select, then enter to submit.";
 
@@ -85,7 +79,8 @@ fn main() -> io::Result<()> {
         }
     }
 
-    let directory_to_search = dummy_to_run_menu();
+    // let directory_to_search = dummy_to_run_menu(&development_path);
+    let directory_to_search = PathBuf::from_str(&development_path);
 
     let re3 = Regex::new(r"\d{1,}").unwrap();
 
